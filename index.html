@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Cause &amp; Effect Diagram (6M)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --paper:#FBFAF6; --ink:#17283D; --muted:#5B6878; --line:#C9CFD6;
+  --man:#B3412E; --machine:#1F5FA8; --material:#2E7D4F;
+  --method:#8A4FB0; --measure:#B07A12; --nature:#0F7C86;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Atkinson Hyperlegible",system-ui,Segoe UI,Roboto,sans-serif;background:var(--paper);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+
+/* ---------- HOST (projector) ---------- */
+.host{display:none;height:100vh;padding:1.2vh 1.5vw;flex-direction:column;gap:1vh}
+body.is-host .host{display:flex}
+body.is-host .guest{display:none}
+.topbar{display:flex;align-items:center;gap:1.2vw;font-size:clamp(12px,1.35vw,22px);min-height:5.5vh}
+.topbar .code{font-weight:700;font-size:1.6em;letter-spacing:.12em;background:var(--ink);color:#fff;padding:.05em .45em;border-radius:6px}
+.topbar .url{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:42vw}
+.topbar .sp{flex:1}
+.topbar .stat{color:var(--muted)}
+.topbar button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:.25em .7em;color:var(--ink)}
+.topbar button:hover{background:#EEF1F4}
+#qr{width:90px;height:90px;background:#fff;padding:4px;border:1px solid var(--line);border-radius:6px;display:none}
+#qr img,#qr canvas{width:100%!important;height:100%!important}
+body.hide-join .joinbits{display:none}
+
+.fish{position:relative;flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 17vw;grid-template-rows:1fr 1fr;min-height:0}
+.fish svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cat{position:relative;padding:0 .6vw;display:flex;flex-direction:column;min-height:0;z-index:1}
+.cat.top{grid-row:1}
+.cat.bot{grid-row:2;flex-direction:column-reverse}
+.cat h2{margin:0;align-self:flex-start;font-size:clamp(14px,1.7vw,28px);color:#fff;padding:.2em .7em;border-radius:6px;background:var(--c)}
+.cat h2 small{font-weight:400;opacity:.85;font-size:.62em;margin-left:.4em}
+.cat ul{list-style:none;margin:.5vh 0;padding:0;display:flex;flex-direction:column;gap:.35vh;overflow:hidden;flex:1;min-height:0}
+.cat.bot ul{justify-content:flex-start}
+.cat li{font-size:var(--fs,clamp(12px,1.35vw,22px));line-height:1.2;padding:.12em .5em;border-left:4px solid var(--c);background:rgba(255,255,255,.88);border-radius:0 4px 4px 0;width:fit-content;max-width:88%;cursor:pointer;animation:pop .35s ease-out}
+.cat li:hover{background:#FDECEA;text-decoration:line-through}
+@keyframes pop{from{transform:translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.cat li{animation:none}}
+.col1{--c:var(--man)}.col2{--c:var(--machine)}.col3{--c:var(--material)}
+.col4{--c:var(--method)}.col5{--c:var(--measure)}.col6{--c:var(--nature)}
+.effect{grid-column:4;grid-row:1 / span 2;display:flex;align-items:center;justify-content:center;padding-left:.6vw;z-index:1}
+#problem{width:100%;min-height:22vh;max-height:60vh;overflow:auto;border:4px solid var(--ink);border-radius:10px;background:#fff;padding:.7em;font-size:clamp(14px,1.8vw,30px);font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;outline:none}
+#problem:empty::before{content:"Click to type the problem";color:#9AA4B0;font-weight:400}
+#problem:focus{box-shadow:0 0 0 4px #BBD3F0}
+
+/* ---------- TRAINEE (phone) ---------- */
+.guest{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+.guest h1{font-size:1.4rem;margin:.2em 0 .1em}
+.guest p.sub{margin:0 0 1em;color:var(--muted)}
+.guest label{display:block;font-weight:700;margin:1em 0 .4em}
+.guest input[type=text],.guest input[type=tel]{width:100%;font:inherit;padding:.7em;border:2px solid var(--line);border-radius:8px;background:#fff}
+.guest input:focus{outline:3px solid #BBD3F0;border-color:var(--machine)}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cats button{border:2px solid var(--c);background:#fff;color:var(--ink);border-radius:8px;padding:.7em .5em;text-align:left}
+.cats button small{display:block;color:var(--muted)}
+.cats button[aria-pressed=true]{background:var(--c);color:#fff}
+.cats button[aria-pressed=true] small{color:#fff;opacity:.9}
+.send{margin-top:1em;width:100%;padding:.85em;border:0;border-radius:8px;background:var(--ink);color:#fff;font-weight:700;font-size:1.05rem}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.status{margin:.8em 0;padding:.6em .8em;border-radius:8px;background:#EEF1F4;color:var(--ink)}
+.status.ok{background:#E3F3E9}.status.bad{background:#FBE5E1}
+.sent{margin-top:1.2em;color:var(--muted);font-size:.95rem}
+.sent li{margin:.2em 0}
+#joinBox{display:none}
+</style>
+</head>
+<body>
+
+<!-- ================= HOST ================= -->
+<div class="host">
+  <div class="topbar">
+    <div class="joinbits" style="display:flex;align-items:center;gap:1vw;flex:1;min-width:0">
+      <div id="qr"></div>
+      <div style="min-width:0">
+        <div>Join code: <span class="code" id="code">····</span></div>
+        <div class="url" id="joinUrl"></div>
+      </div>
+    </div>
+    <span class="stat" id="stat">Starting…</span>
+    <button id="btnJoin" title="Hide / show join code and QR">Hide join info</button>
+    <button id="btnClear" title="Remove all causes">Clear causes</button>
+    <button id="btnFull" title="Full screen">Full screen</button>
+  </div>
+
+  <div class="fish" id="fish">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <!-- spine -->
+      <line x1="0.5" y1="50" x2="77" y2="50" stroke="#17283D" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>
+      <polygon points="77,50 74.6,48.6 74.6,51.4" fill="#17283D"/>
+      <!-- bones: top row -->
+      <line x1="13" y1="20" x2="27" y2="50" stroke="var(--man)" stroke-width="3" vector-effect="non-scaling-stroke"/>
+      <line x1="39.5" y1="20" x2="53" y2="50" stroke="var(--machine)" stroke-width="3" vector-effect="non-scaling-stroke"/>
+      <line x1="66" y1="20" x2="79" y2="50" stroke="var(--material)" stroke-width="3" vector-effect="non-scaling-stroke" transform="translate(-4,0)"/>
+      <!-- bones: bottom row -->
+      <line x1="13" y1="80" x2="27" y2="50" stroke="var(--method)" stroke-width="3" vector-effect="non-scaling-stroke"/>
+      <line x1="39.5" y1="80" x2="53" y2="50" stroke="var(--measure)" stroke-width="3" vector-effect="non-scaling-stroke"/>
+      <line x1="66" y1="80" x2="79" y2="50" stroke="var(--nature)" stroke-width="3" vector-effect="non-scaling-stroke" transform="translate(-4,0)"/>
+    </svg>
+
+    <section class="cat top col1"><h2>Man<small>People</small></h2><ul data-cat="Man"></ul></section>
+    <section class="cat top col2"><h2>Machine<small>Equipment</small></h2><ul data-cat="Machine"></ul></section>
+    <section class="cat top col3"><h2>Material<small>Inputs</small></h2><ul data-cat="Material"></ul></section>
+    <section class="cat bot col4" style="grid-column:1"><h2>Method<small>Process</small></h2><ul data-cat="Method"></ul></section>
+    <section class="cat bot col5" style="grid-column:2"><h2>Measurement<small>Inspection</small></h2><ul data-cat="Measurement"></ul></section>
+    <section class="cat bot col6" style="grid-column:3"><h2>Mother Nature<small>Environment</small></h2><ul data-cat="Mother Nature"></ul></section>
+
+    <div class="effect"><div id="problem" contenteditable="true" spellcheck="false" role="textbox" aria-label="Problem statement"></div></div>
+  </div>
+</div>
+
+<!-- ================= TRAINEE ================= -->
+<div class="guest">
+  <h1>Add a cause</h1>
+  <p class="sub">Pick a category, type one cause, send. You can send as many as you like.</p>
+
+  <div id="joinBox">
+    <label for="codeIn">Join code (shown on the projector)</label>
+    <input id="codeIn" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4-digit code">
+    <button class="send" id="btnJoinGo">Join</button>
+  </div>
+
+  <div class="status" id="gStatus">Connecting…</div>
+
+  <div id="entry" style="display:none">
+    <label>Category</label>
+    <div class="cats" id="cats"></div>
+
+    <label for="cause">Cause (short, one idea)</label>
+    <input id="cause" type="text" maxlength="90" autocomplete="off" placeholder="e.g. No operator training">
+    <button class="send" id="btnSend" disabled>Send to screen</button>
+    <ul class="sent" id="sent"></ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CATS = [
+    {k:"Man",           sub:"People",      c:"var(--man)"},
+    {k:"Machine",       sub:"Equipment",   c:"var(--machine)"},
+    {k:"Material",      sub:"Inputs",      c:"var(--material)"},
+    {k:"Method",        sub:"Process",     c:"var(--method)"},
+    {k:"Measurement",   sub:"Inspection",  c:"var(--measure)"},
+    {k:"Mother Nature", sub:"Environment", c:"var(--nature)"}
+  ];
+  const PREFIX = "cne6m-";            // peer-id prefix; avoids clashes on the public broker
+  const MAX_LEN = 90;
+  const params = new URLSearchParams(location.search);
+  const isHost = params.has("host");
+  const $ = id => document.getElementById(id);
+
+  /* =============================== HOST =============================== */
+  function startHost(){
+    document.body.classList.add("is-host");
+    const lists = {};
+    document.querySelectorAll(".cat ul").forEach(u => lists[u.dataset.cat] = u);
+    const conns = new Set();
+    const lastSent = new WeakMap();
+    let peer, code, tries = 0, total = 0;
+
+    function newCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
+
+    function joinLink(){
+      const base = location.origin + location.pathname;
+      return base + "?c=" + code;
+    }
+    function showJoinInfo(){
+      $("code").textContent = code;
+      const link = joinLink();
+      $("joinUrl").textContent = link.replace(/^https?:\/\//,"");
+      const qr = $("qr"); qr.innerHTML = ""; qr.style.display = "block";
+      try { new QRCode(qr, {text: link, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M}); }
+      catch(e){ qr.style.display = "none"; }
+    }
+    function updateStat(){
+      $("stat").textContent = conns.size + " connected · " + total + " causes";
+    }
+
+    function open(){
+      if(!code) code = (location.hash.slice(1).match(/^\d{4}$/)||[newCode()])[0];
+      history.replaceState(null,"",location.pathname+location.search+"#"+code);
+      peer = new Peer(PREFIX + code);
+      peer.on("open", () => { showJoinInfo(); updateStat(); });
+      peer.on("error", err => {
+        if(err.type === "unavailable-id"){
+          tries++;
+          if(tries <= 4){ $("stat").textContent = "Reconnecting…"; setTimeout(()=>{ try{peer.destroy()}catch(e){} open(); }, 3000); }
+          else { code = newCode(); tries = 0; try{peer.destroy()}catch(e){} open(); }
+        } else if(err.type === "network" || err.type === "server-error" || err.type === "socket-error"){
+          $("stat").textContent = "Cannot reach the connection server. Check internet.";
+        }
+      });
+      peer.on("disconnected", () => { try{ peer.reconnect(); }catch(e){} });
+      peer.on("connection", conn => {
+        conns.add(conn); updateStat();
+        conn.on("data", d => handle(conn, d));
+        const drop = () => { conns.delete(conn); updateStat(); };
+        conn.on("close", drop); conn.on("error", drop);
+      });
+    }
+
+    function handle(conn, d){
+      if(!d || d.t !== "cause") return;
+      const cat = String(d.cat||""), text = String(d.text||"").replace(/\s+/g," ").trim().slice(0,MAX_LEN);
+      const now = Date.now();
+      if(!lists[cat] || !text){ return conn.send({t:"ack", ok:false, msg:"Invalid entry"}); }
+      if(now - (lastSent.get(conn)||0) < 1500){ return conn.send({t:"ack", ok:false, msg:"Please wait a moment before sending again"}); }
+      lastSent.set(conn, now);
+      addCause(cat, text);
+      conn.send({t:"ack", ok:true});
+    }
+
+    function addCause(cat, text){
+      const li = document.createElement("li");
+      li.textContent = text;
+      li.title = "Click to remove";
+      li.addEventListener("click", () => { li.remove(); total--; updateStat(); fit(); });
+      lists[cat].appendChild(li);
+      total++; updateStat(); fit();
+    }
+
+    /* shrink text automatically if a column gets crowded */
+    function fit(){
+      Object.values(lists).forEach(ul => {
+        ul.style.removeProperty("--fs");
+        const items = ul.querySelectorAll("li");
+        let fs = parseFloat(getComputedStyle(items[0]||ul).fontSize) || 18;
+        let guard = 0;
+        while(ul.scrollHeight > ul.clientHeight + 1 && fs > 9 && guard++ < 40){
+          fs -= 0.5; ul.style.setProperty("--fs", fs + "px");
+        }
+      });
+    }
+    window.addEventListener("resize", fit);
+
+    $("btnClear").addEventListener("click", () => {
+      if(!confirm("Remove ALL causes from the screen?")) return;
+      Object.values(lists).forEach(u => u.innerHTML = ""); total = 0; updateStat();
+    });
+    $("btnFull").addEventListener("click", () => {
+      if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(()=>{});
+    });
+    $("btnJoin").addEventListener("click", () => {
+      const h = document.body.classList.toggle("hide-join");
+      $("btnJoin").textContent = h ? "Show join info" : "Hide join info";
+    });
+    $("problem").addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } });
+    $("problem").addEventListener("paste", e => {
+      e.preventDefault();
+      document.execCommand("insertText", false, (e.clipboardData||window.clipboardData).getData("text/plain"));
+    });
+
+    open();
+  }
+
+  /* ============================== TRAINEE ============================== */
+  function startGuest(){
+    let peer, conn, code = (params.get("c")||"").replace(/\D/g,"").slice(0,4);
+    let cat = null, retry = 0, mine = 0;
+
+    const catsBox = $("cats");
+    CATS.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button"; b.style.setProperty("--c", c.c); b.setAttribute("aria-pressed","false");
+      b.innerHTML = c.k + "<small>" + c.sub + "</small>";
+      b.addEventListener("click", () => {
+        cat = c.k;
+        catsBox.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b ? "true":"false"));
+        refresh(); $("cause").focus();
+      });
+      catsBox.appendChild(b);
+    });
+
+    function setStatus(msg, cls){ const s=$("gStatus"); s.textContent = msg; s.className = "status" + (cls?" "+cls:""); }
+    function refresh(){ $("btnSend").disabled = !(conn && conn.open && cat && $("cause").value.trim()); }
+
+    function connect(){
+      if(!/^\d{4}$/.test(code)){ $("joinBox").style.display="block"; $("entry").style.display="none"; setStatus("Enter the 4-digit code from the projector."); return; }
+      $("joinBox").style.display="none";
+      setStatus("Connecting to room " + code + "…");
+      try{ peer && peer.destroy(); }catch(e){}
+      peer = new Peer();
+      peer.on("open", () => {
+        conn = peer.connect(PREFIX + code, {reliable:true});
+        const timer = setTimeout(() => { if(!conn.open) fail("Could not reach the room. Check the code, or ask the trainer."); }, 12000);
+        conn.on("open", () => { clearTimeout(timer); retry = 0; setStatus("Connected ✓", "ok"); $("entry").style.display="block"; refresh(); });
+        conn.on("data", d => {
+          if(d && d.t==="ack"){
+            if(d.ok){ setStatus("Sent ✓ — look at the screen", "ok"); $("cause").value=""; refresh(); }
+            else setStatus(d.msg || "Not sent", "bad");
+          }
+        });
+        conn.on("close", () => { $("entry").style.display="none"; auto("Disconnected."); });
+      });
+      peer.on("error", err => {
+        if(err.type === "peer-unavailable") fail("Room " + code + " not found. Check the code.");
+        else auto("Connection problem (" + err.type + ").");
+      });
+    }
+    function fail(msg){ setStatus(msg, "bad"); $("joinBox").style.display="block"; }
+    function auto(msg){
+      if(retry < 5){ retry++; setStatus(msg + " Retrying… (" + retry + "/5)", "bad"); setTimeout(connect, 2500); }
+      else fail(msg + " Tap Join to try again.");
+    }
+
+    $("btnJoinGo").addEventListener("click", () => { code = $("codeIn").value.replace(/\D/g,"").slice(0,4); retry = 0; connect(); });
+    $("cause").addEventListener("input", refresh);
+    $("cause").addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); send(); } });
+    $("btnSend").addEventListener("click", send);
+
+    function send(){
+      const text = $("cause").value.trim();
+      if(!(conn && conn.open && cat && text)) return;
+      conn.send({t:"cause", cat, text});
+      const li = document.createElement("li");
+      li.textContent = cat + ": " + text;     // local list only, lives in this tab's memory
+      $("sent").prepend(li);
+    }
+    connect();
+  }
+
+  if(isHost) startHost(); else startGuest();
+})();
+</script>
+</body>
+</html>
