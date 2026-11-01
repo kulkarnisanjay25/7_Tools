@@ -85,7 +85,8 @@ run(i=>i>0&&d(i)>0,5,2);run(i=>i>0&&d(i)<0,5,2);run(i=>i>1&&d(i)*d(i-1)<0,12,3);
 z.forEach((_,i)=>{for(const s of[1,-1]){if(i>1&&[z[i-2],z[i-1],z[i]].filter(a=>a*s>2).length>=2&&z[i]*s>2)T[4].push(i);if(i>3&&z.slice(i-4,i+1).filter(a=>a*s>1).length>=4&&z[i]*s>1)T[5].push(i)}});
 run(i=>Math.abs(z[i])<1,15,6);run(i=>Math.abs(z[i])>1,8,7);T.forEach(a=>a.sort((x,y)=>x-y));return T}
 function tout(nm,t,off=0){let s='Test Results for '+nm+'\n',any=0;t.forEach((a,i)=>{if(a.length){any=1;s+=`\nTEST ${i+1}. ${MSG[i]}\nTest Failed at points: ${a.map(j=>j+1+off).join(', ')}\n`}});return s+(any?'':'\nNo points failed the tests performed.')}
-const Phi=z=>{const t=1/(1+.2316419*Math.abs(z)),p=.3989423*Math.exp(-z*z/2)*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p},D2=[1.128,1.693,2.059,2.326,2.534,2.704,2.847,2.97,3.078],pf=s=>String(s).trim()===''?NaN:Number(s);
+function erfc(x){const z=Math.abs(x);let r;if(z<2.5){let t=z,q=z,n=0;do{n++;t*=-z*z/n;q+=t/(2*n+1)}while(Math.abs(t)>1e-18);r=1-2/Math.sqrt(Math.PI)*q}else{let f=0;for(let k=150;k>=1;k--)f=k/2/(z+f);r=Math.exp(-z*z)/Math.sqrt(Math.PI)/(z+f)}return x>=0?r:2-r}
+const Phi=z=>.5*erfc(-z/Math.SQRT2),c4f=m=>Math.sqrt(2/(m-1))*Math.exp(lg(m/2)-lg((m-1)/2)),D2=[1.128,1.693,2.059,2.326,2.534,2.704,2.847,2.97,3.078],pf=s=>String(s).trim()===''?NaN:Number(s);
 function atests(v,cl,u,l,m){const q=(a,i)=>Array.isArray(a)?a[i]:a,T=[[],[]];v.forEach((x,i)=>{if(x>q(u,i)||x<q(l,i))T[0].push(i)});if(m>0){let c=0,s0=0;v.forEach((a,i)=>{const s=a>cl?1:a<cl?-1:0;if(s&&s==s0)c++;else{c=s?1:0;s0=s}if(c>=9)T[1].push(i)})}return T}
 function att(k,v){const nm=C[v.x].n,d=[],sz=[];nums(v.x).forEach((a,i)=>{if(isNaN(a))return;const n=k=='p'||k=='u'?num1(v.s,i):k=='np'?v.n:1;if(isNaN(n)||n<=0)return;d.push(a);sz.push(n)});if(d.length<5)throw Error('Need at least 5 subgroups.');
 const S=sum(d),M=sum(sz),f=a=>a.every(z=>z==a[0])?a[0]:a,sq=Math.sqrt;let cl,pl,u,l,ti,yl,cn;
@@ -168,7 +169,7 @@ norm:{t:'Normality Test (Anderson-Darling)',f:[N('x','Variable',0)],run:v=>{cons
 out('Normality Test: '+C[v.x].n,tbl(['Variable','N','Mean','StDev','AD','P-Value'],[[C[v.x].n,n,g(m),g(s),g(A,3),p<.005?'<0.005':fp(p)]])+'\n\nH0: data follow a normal distribution. P < 0.05 means normality is rejected.')}},
 cap:{t:'Capability Analysis (Normal)',f:[N('x','Single column',0),{k:'n',l:'Subgroup size (1 = individual values)',t:'k',d:1},{k:'lsl',l:'Lower spec (LSL)',t:'s',d:'9.8'},{k:'usl',l:'Upper spec (USL)',t:'s',d:'10.4'},{k:'tg',l:'Target (optional)',t:'s',d:''}],run:v=>{
 const x=ok(nums(v.x)),n=x.length,k=v.n,m=mean(x),so=sd(x),L=pf(v.lsl),U=pf(v.usl),Tg=pf(v.tg),nm=C[v.x].n;if(isNaN(L)&&isNaN(U))throw Error('Enter at least one specification limit.');if(n<5||!(k>=1&&k<=10))throw Error('Need 5+ values and subgroup size 1 to 10.');
-let sw;if(k>1){const r=[];for(let i=0;i+k<=n;i+=k){const s=x.slice(i,i+k);r.push(Math.max(...s)-Math.min(...s))}sw=mean(r)/D2[k-2]}else sw=mean(x.slice(1).map((a,i)=>Math.abs(a-x[i])))/1.128;
+let sw;if(k>1){let ss=0,df=0;for(let i=0;i+k<=n;i+=k){const q=x.slice(i,i+k),v=sd(q)**2;ss+=(k-1)*v;df+=k-1}sw=Math.sqrt(ss/df)/c4f(df+1)}else sw=mean(x.slice(1).map((a,i)=>Math.abs(a-x[i])))/1.128;
 const ix=s=>{const a=isNaN(U)?NaN:(U-m)/(3*s),b=isNaN(L)?NaN:(m-L)/(3*s);return{p:isNaN(U)||isNaN(L)?NaN:(U-L)/(6*s),u:a,l:b,k:Math.min(...[a,b].filter(z=>!isNaN(z)))}},w=ix(sw),o=ix(so),
 pm=s=>[isNaN(L)?NaN:Phi((L-m)/s)*1e6,isNaN(U)?NaN:(1-Phi((U-m)/s))*1e6],ob=[isNaN(L)?NaN:x.filter(a=>a<L).length/n*1e6,isNaN(U)?NaN:x.filter(a=>a>U).length/n*1e6],
 kv=(a,b)=>a.padEnd(18)+b,pp=(a,t)=>[kv('PPM < LSL',g(a[0],2)),kv('PPM > USL',g(a[1],2)),kv('PPM Total',g(a.reduce((z,y)=>z+(isNaN(y)?0:y),0),2))].join('\n'),sp=z=>isNaN(z)?'*':z;
