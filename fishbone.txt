@@ -1,0 +1,81 @@
+Dimension out of tolerance
+
+Man
+Inadequate training
+Fatigue on night shift
+
+Machine
+Tool wear
+Loose fixture
+
+Method
+No standard work
+Wrong feed rate
+
+Material
+Supplier variation
+Wrong grade
+
+Measurement
+Gauge not calibrated
+Parallax error
+
+Environment
+High temperature
+Dust
+
+=====
+
+Late delivery to customer
+
+Planning
+Forecast inaccurate
+No buffer stock
+
+Supplier
+Delayed material
+Poor communication
+
+Transport
+Vehicle breakdown
+Route not optimised
+
+Process
+Long order approval
+Manual data entry
+
+People
+Staff shortage
+No backup
+
+Systems
+Software downtime
+Wrong address data
+
+=====
+
+High customer complaints
+
+Product
+Defective units
+Wrong specification
+
+Service
+Slow response
+Rude behaviour
+
+Packaging
+Damaged in transit
+Missing label
+
+Information
+Unclear manual
+Wrong price shown
+
+Training
+Agents not skilled
+No refresher
+
+Follow-up
+No ticket tracking
+Repeat calls
