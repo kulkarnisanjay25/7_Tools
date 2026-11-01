@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control Chart Selection Guide</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1b2430;--mut:#5a6677;--line:#d5dbe4;--acc:#1f4e79;--v:#1f6f8b;--a:#a4552b;--vb:#e3f1f6;--ab:#f8ece4}
+@media(prefers-color-scheme:dark){:root{--bg:#10151c;--card:#19212b;--ink:#e7ecf2;--mut:#9aa7b8;--line:#2d3846;--acc:#7fb2e0;--v:#6cc3de;--a:#e39a73;--vb:#16313b;--ab:#38261b}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 "Segoe UI",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.w{max-width:980px;margin:0 auto;padding:16px}h1{margin:0 0 4px;font-size:26px}h2{margin:30px 0 10px;font-size:19px;color:var(--acc)}h3{margin:0;font-size:16px}
+.sub{color:var(--mut);margin:0 0 12px}.btn{display:inline-block;background:var(--acc);color:var(--bg);padding:7px 14px;border-radius:6px;text-decoration:none;font-weight:600}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.c{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.c.v{border-top:4px solid var(--v)}.c.a{border-top:4px solid var(--a)}.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:6px}.tv{background:var(--vb);color:var(--v)}.ta{background:var(--ab);color:var(--a)}
+ul{margin:6px 0 0;padding-left:20px}li{margin:2px 0}.use{color:var(--mut);margin:2px 0 4px}.pr{margin-top:8px;font-size:13px;color:var(--mut);border-top:1px dashed var(--line);padding-top:6px}
+.tree,.tree ul{list-style:none;padding-left:22px;margin:4px 0;border-left:2px solid var(--line)}.tree{border:0;padding:0}.tree li{margin:6px 0;position:relative}
+.q{display:inline-block;background:var(--card);border:1px solid var(--acc);border-radius:6px;padding:3px 10px;font-weight:600}.ans{display:inline-block;border-radius:6px;padding:3px 10px;font-weight:700;color:#fff}.av{background:var(--v);color:#10151c}.aa{background:var(--a);color:#10151c}.ed{color:var(--mut);font-size:13px;margin-right:6px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;background:var(--card);font-size:13.5px}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--vb)}
+details{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:6px 0}summary{cursor:pointer;font-weight:600}details p{margin:6px 0 0;color:var(--v)}
+.warn{background:var(--ab);border-left:4px solid var(--a);padding:8px 12px;border-radius:4px}.foot{color:var(--mut);font-size:12px;margin:26px 0 8px}
+</style></head><body><div class="w">
+<h1>Control Chart Selection Guide</h1><p class="sub">Variable (measured) and attribute (counted) charts: which one to use, where, and practice data in Stat Studio.</p>
+<a class="btn" href="index.html">Open Stat Studio</a>
+
+<h2>1. Two kinds of data</h2>
+<div class="g2"><div class="c v"><h3>Variable data <span class="tag tv">measured</span></h3><p class="use">A number on a continuous scale: length, weight, time, temperature, pressure, cost.</p><p>Gives more information per reading, so it needs smaller samples and detects shifts sooner.</p></div>
+<div class="c a"><h3>Attribute data <span class="tag ta">counted</span></h3><p class="use">A count of pass/fail items or of defects.</p><p><b>Defective</b> = a whole item is bad (1 item, good or bad). <b>Defect</b> = one flaw; an item can have many.<br>Example: a shirt with 3 stains is <b>1 defective</b> and has <b>3 defects</b>.</p></div></div>
+
+<h2>2. Which chart? Follow the questions</h2>
+<ul class="tree"><li><span class="q">Is the data measured or counted?</span>
+<ul><li><span class="ed">Measured →</span><span class="q">How many readings in each subgroup?</span>
+<ul><li><span class="ed">1 (one reading at a time)</span><span class="ans av">I-MR</span></li><li><span class="ed">2 to 8</span><span class="ans av">Xbar-R</span></li><li><span class="ed">9 or more</span><span class="ans av">Xbar-S</span></li></ul></li>
+<li><span class="ed">Counted →</span><span class="q">Counting defective items, or defects?</span>
+<ul><li><span class="ed">Defective items →</span><span class="q">Is the sample size constant?</span><ul><li><span class="ed">Yes</span><span class="ans aa">NP</span></li><li><span class="ed">No</span><span class="ans aa">P</span></li></ul></li>
+<li><span class="ed">Defects →</span><span class="q">Is the area / opportunity constant?</span><ul><li><span class="ed">Yes</span><span class="ans aa">C</span></li><li><span class="ed">No</span><span class="ans aa">U</span></li></ul></li></ul></li></ul></li></ul>
+
+<h2>3. Quick reference</h2>
+<div class="tw"><table><tr><th>Chart</th><th>Plots</th><th>Centre line and limits</th><th>Stat Studio menu</th><th>Practice columns</th></tr>
+<tr><td><b>I-MR</b></td><td>Each value; moving range</td><td>X̄ ± 2.66 MR̄ ; MR: 3.267 MR̄</td><td>Stat › Control Charts › I-MR</td><td>Diameter</td></tr>
+<tr><td><b>Xbar-R</b></td><td>Subgroup mean; range</td><td>X̿ ± A2 R̄ ; D3 R̄, D4 R̄</td><td>… › Xbar-R</td><td>Diameter, size 5</td></tr>
+<tr><td><b>Xbar-S</b></td><td>Subgroup mean; std dev</td><td>X̿ ± A3 S̄ ; B3 S̄, B4 S̄</td><td>… › Xbar-S</td><td>Diameter, size 5 to 10</td></tr>
+<tr><td><b>P</b></td><td>Proportion defective</td><td>p̄ ± 3√(p̄(1−p̄)/n), changes with n</td><td>… › P Chart</td><td>Rejects, Lot_Size</td></tr>
+<tr><td><b>NP</b></td><td>Number defective</td><td>np̄ ± 3√(np̄(1−p̄))</td><td>… › NP Chart</td><td>Faulty (n = 100)</td></tr>
+<tr><td><b>C</b></td><td>Defects per unit</td><td>c̄ ± 3√c̄</td><td>… › C Chart</td><td>Flaws</td></tr>
+<tr><td><b>U</b></td><td>Defects per unit of size n</td><td>ū ± 3√(ū/n), changes with n</td><td>… › U Chart</td><td>Errors, Pages</td></tr></table></div>
+
+<h2>4. Variable charts and where to use them</h2><div class="g2">
+<div class="c v"><h3>I-MR <span class="tag tv">n = 1</span></h3><p class="use">One reading per time period; the data are slow or costly to get.</p><ul><li>Viscosity of each batch of paint</li><li>Monthly electricity consumption of a plant</li><li>Concentration in a process tank, tested once per shift</li><li>Time taken to process each loan application</li><li>Strength from a destructive test (1 piece per lot)</li></ul><div class="pr">Practice: Diameter column (Stat › Control Charts › I-MR).</div></div>
+<div class="c v"><h3>Xbar-R <span class="tag tv">n = 2 to 8</span></h3><p class="use">Small rational subgroups taken together from the same stream.</p><ul><li>Shaft diameter: 5 consecutive parts every hour</li><li>Fill weight of 4 bottles every 30 minutes</li><li>Lab turnaround time: 5 reports per shift</li><li>Paint film thickness on 4 panels per batch</li><li>Cycle time of 5 consecutive machine cycles each hour</li></ul><div class="pr">Practice: Diameter column, subgroup size 5.</div></div>
+<div class="c v"><h3>Xbar-S <span class="tag tv">n ≥ 9</span></h3><p class="use">Large subgroups, where the range wastes information.</p><ul><li>Tablet weight: 10 tablets from the press every 15 minutes</li><li>Bore diameter of the 10 cavities in a mould, each shot</li><li>Tensile strength of 12 coupons per spool lot</li><li>Fabric thickness at 10 points across a roll</li><li>Fill volume of a 12-head filler, measured together</li></ul><div class="pr">Practice: Diameter column, subgroup size 10 (or 5).</div></div></div>
+
+<h2>5. Attribute charts and where to use them</h2><div class="g2">
+<div class="c a"><h3>P chart <span class="tag ta">defective, n varies</span></h3><p class="use">Fraction of items that fail; the sample size changes.</p><ul><li>Fraction of invoices with errors each day (volume varies)</li><li>Proportion of castings rejected per lot</li><li>Share of patients readmitted within 30 days, per month</li><li>Fraction of late deliveries per week</li><li>Proportion of orders returned by customers per day</li></ul><div class="pr">Practice: Rejects with Lot_Size. Sample 18 is out of control.</div></div>
+<div class="c a"><h3>NP chart <span class="tag ta">defective, n constant</span></h3><p class="use">Number of defective items in a fixed-size sample.</p><ul><li>Defective bulbs in a fixed sample of 100 per shift</li><li>Leaking bottles in 100 checked every hour</li><li>Incorrect entries in an audit of 50 forms</li><li>Failed units in a 30-piece pass/fail test per batch</li><li>Non-conforming parts in 200 inspected per lot</li></ul><div class="pr">Practice: Faulty column, subgroup size 100. Sample 12 is out of control.</div></div>
+<div class="c a"><h3>C chart <span class="tag ta">defects, area constant</span></h3><p class="use">Number of defects on equal-sized units.</p><ul><li>Scratches on each painted panel of the same size</li><li>Bubbles in each 1 m² glass sheet</li><li>Typing errors per fixed-length document</li><li>Soldering defects per circuit board of one type</li><li>Customer complaints per week, or near-misses per month</li></ul><div class="pr">Practice: Flaws column. Sample 9 is out of control.</div></div>
+<div class="c a"><h3>U chart <span class="tag ta">defects, size varies</span></h3><p class="use">Defects per unit when the amount inspected changes.</p><ul><li>Flaws per metre of cable, with varying lengths checked</li><li>Errors per report of different page counts</li><li>Bugs per 1000 lines in modules of different size</li><li>Falls per 1000 patient-days, with varying patient-days</li><li>Paint defects per car body in batches of different size</li></ul><div class="pr">Practice: Errors with Pages. Sample 21 is out of control.</div></div></div>
+
+<h2>6. Test yourself: choose the chart</h2>
+<details><summary>A. Weight of 5 pills taken from the press every hour</summary><p>Xbar-R: measured, subgroup of 5.</p></details>
+<details><summary>B. Percentage of orders shipped late each day; daily orders vary</summary><p>P chart: defective orders, changing sample size.</p></details>
+<details><summary>C. Bubbles on each 1 m² glass sheet</summary><p>C chart: defects, constant area.</p></details>
+<details><summary>D. Furnace temperature logged once per hour</summary><p>I-MR: one reading at a time.</p></details>
+<details><summary>E. Failed units among a fixed 50-piece sample from each lot</summary><p>NP chart: defective items, constant sample size.</p></details>
+<details><summary>F. Errors per 1000 lines of code in modules of different size</summary><p>U chart: defects, changing amount inspected.</p></details>
+<details><summary>G. Fill volume of all 12 filling heads, measured together every 15 minutes</summary><p>Xbar-S: measured, subgroup of 12.</p></details>
+
+<h2>7. Good practice</h2>
+<div class="warn"><b>Control limits are not specification limits.</b> Limits come from the process data, specs come from the customer. Never draw one on the other.</div>
+<ul><li><b>Stable first, capable second.</b> Check the control chart before quoting Cp or Cpk.</li>
+<li><b>Rational subgroups.</b> Take items produced close together, so variation inside a subgroup is common-cause only.</li>
+<li><b>Use 20 to 25 subgroups</b> to set trial limits, and reset them only after a verified process change.</li>
+<li><b>Investigate special causes.</b> A flagged point means find out what changed; adjusting for common-cause noise makes things worse.</li>
+<li><b>Count correctly.</b> Defectives go on P or NP, defects on C or U. A mix-up gives wrong limits.</li></ul>
+<h2>8. Beyond these charts</h2>
+<ul><li><b>Small, persistent shifts:</b> CUSUM or EWMA charts.</li><li><b>Rare events:</b> g chart (items between events) or t chart (time between events).</li><li><b>Many short runs or products:</b> Z-MR (standardised) charts.</li><li><b>Several streams or heads:</b> separate charts per stream, or a between/within chart.</li></ul>
+<p class="sub">Stat Studio draws I-MR, Xbar-R, Xbar-S, P, NP, C and U. The charts in section 8 are not in the program.</p>
+<p class="foot">All sample data in Stat Studio is simulated for training.</p>
+</div></body></html>

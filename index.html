@@ -44,7 +44,10 @@ const df=[['Scratch',22],['Dent',14],['Crack',9],['Burr',6],['Discoloration',5],
 for(let i=df.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[df[i],df[j]]=[df[j],df[i]]}
 const sh=df.map(()=>['Morning','Evening','Night'][Math.floor(r()*3)]),mc=[],dia=[],tp=[],yl=[];
 for(let i=0;i<100;i++){const m=Math.floor(r()*3),t=150+r()*40;mc.push('M'+(m+1));dia.push((10+[0,.05,.12][m]+(i==40?.35:0)+(i>=75?.1:0)+nz()*.08).toFixed(3));tp.push(t.toFixed(1));yl.push((20+.4*t+nz()*2).toFixed(2))}
-return[{n:'Defect',d:df},{n:'Shift',d:sh},{n:'Diameter',d:dia},{n:'Machine',d:mc},{n:'Temp',d:tp},{n:'Yield',d:yl}]}
+const bin=(n,p)=>{let c=0;for(let i=0;i<n;i++)if(r()<p)c++;return c},poi=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r()}while(p>L);return k-1},lot=[],rej=[],fa=[],fl=[],er=[],pg=[];
+for(let i=0;i<25;i++){const n=80+Math.floor(r()*81),u=20+Math.floor(r()*41);lot.push(n);rej.push(bin(n,i==17?.17:.06));fa.push(bin(100,i==11?.25:.05));fl.push(poi(i==8?12:4));pg.push(u);er.push(poi(u*(i==20?.5:.12)))}
+const S_=a=>a.map(String);
+return[{n:'Defect',d:df},{n:'Shift',d:sh},{n:'Diameter',d:dia},{n:'Machine',d:mc},{n:'Temp',d:tp},{n:'Yield',d:yl},{n:'Rejects',d:S_(rej)},{n:'Lot_Size',d:S_(lot)},{n:'Faulty',d:S_(fa)},{n:'Flaws',d:S_(fl)},{n:'Errors',d:S_(er)},{n:'Pages',d:S_(pg)}]}
 const cell=(c,i)=>String(C[c].d[i]??'').trim(),num1=(c,i)=>{const t=cell(c,i);return t===''?NaN:Number(t)},nums=c=>C[c].d.map((_,i)=>num1(c,i)),ok=a=>a.filter(x=>!isNaN(x));
 const isNum=c=>{const v=C[c].d.map((_,i)=>cell(c,i)).filter(s=>s!=='');return v.length>0&&v.every(s=>!isNaN(s))};
 const numCols=()=>C.map((_,i)=>i).filter(isNum),mcol=()=>{let i=C.findIndex(c=>c.n=='Machine');if(i<0){const t=C.map((_,i)=>i).filter(j=>!isNum(j));i=t.length?t[t.length-1]:-1}return i};
@@ -83,6 +86,14 @@ z.forEach((_,i)=>{for(const s of[1,-1]){if(i>1&&[z[i-2],z[i-1],z[i]].filter(a=>a
 run(i=>Math.abs(z[i])<1,15,6);run(i=>Math.abs(z[i])>1,8,7);T.forEach(a=>a.sort((x,y)=>x-y));return T}
 function tout(nm,t,off=0){let s='Test Results for '+nm+'\n',any=0;t.forEach((a,i)=>{if(a.length){any=1;s+=`\nTEST ${i+1}. ${MSG[i]}\nTest Failed at points: ${a.map(j=>j+1+off).join(', ')}\n`}});return s+(any?'':'\nNo points failed the tests performed.')}
 const Phi=z=>{const t=1/(1+.2316419*Math.abs(z)),p=.3989423*Math.exp(-z*z/2)*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p},D2=[1.128,1.693,2.059,2.326,2.534,2.704,2.847,2.97,3.078],pf=s=>String(s).trim()===''?NaN:Number(s);
+function atests(v,cl,u,l,m){const q=(a,i)=>Array.isArray(a)?a[i]:a,T=[[],[]];v.forEach((x,i)=>{if(x>q(u,i)||x<q(l,i))T[0].push(i)});if(m>0){let c=0,s0=0;v.forEach((a,i)=>{const s=a>cl?1:a<cl?-1:0;if(s&&s==s0)c++;else{c=s?1:0;s0=s}if(c>=9)T[1].push(i)})}return T}
+function att(k,v){const nm=C[v.x].n,d=[],sz=[];nums(v.x).forEach((a,i)=>{if(isNaN(a))return;const n=k=='p'||k=='u'?num1(v.s,i):k=='np'?v.n:1;if(isNaN(n)||n<=0)return;d.push(a);sz.push(n)});if(d.length<5)throw Error('Need at least 5 subgroups.');
+const S=sum(d),M=sum(sz),f=a=>a.every(z=>z==a[0])?a[0]:a,sq=Math.sqrt;let cl,pl,u,l,ti,yl,cn;
+if(k=='p'){cl=S/M;pl=d.map((a,i)=>a/sz[i]);u=f(sz.map(n=>Math.min(1,cl+3*sq(cl*(1-cl)/n))));l=f(sz.map(n=>Math.max(0,cl-3*sq(cl*(1-cl)/n))));ti='P';yl='Proportion';cn='P̄'}
+else if(k=='np'){const n=sz[0],pb=S/M;cl=mean(d);pl=d;u=Math.min(n,cl+3*sq(cl*(1-pb)));l=Math.max(0,cl-3*sq(cl*(1-pb)));ti='NP';yl='Sample Count';cn='NP̄'}
+else if(k=='c'){cl=mean(d);pl=d;u=cl+3*sq(cl);l=Math.max(0,cl-3*sq(cl));ti='C';yl='Sample Count';cn='C̄'}
+else{cl=S/M;pl=d.map((a,i)=>a/sz[i]);u=f(sz.map(n=>cl+3*sq(cl/n)));l=f(sz.map(n=>Math.max(0,cl-3*sq(cl/n))));ti='U';yl='Sample Count Per Unit';cn='Ū'}
+const t=atests(pl,cl,u,l,v.tm>0?1:0);out(ti+' Chart of '+nm,tout(ti+' Chart of '+nm,t));gw(ti+' Chart',csvg({title:ti+' Chart of '+nm,v:pl,cl,ucl:u,lcl:l,cn,t,xl:'Sample',yl}))}
 function unus(p,L,xn,yn){const r=p.map(q=>{const f=L.b0+L.b1*q.x,e=q.y-f,h=1/L.n+(q.x-L.mx)**2/L.sxx,sr=e/(L.s*Math.sqrt(1-h)),fl=(Math.abs(sr)>2?'R':'')+(h>6/L.n?'X':'');return fl?[q.r,g(q.x),g(q.y),g(f),g(e),g(sr,2)+' '+fl]:null}).filter(Boolean);return r.length?'\n\nFits and Diagnostics for Unusual Observations\n\n'+tbl(['Obs',xn,yn,'Fit','Resid','Std Resid'],r)+'\n\nR  Large residual\nX  Unusual X':''}
 /* ---------- graphs ---------- */
 function frame(o){const W=700,H=o.H||440,L=70,R=o.R||30,T=46,B=62,sx=v=>L+(v-o.x[0])/(o.x[1]-o.x[0])*(W-L-R),sy=v=>H-B-(v-o.y[0])/(o.y[1]-o.y[0])*(H-T-B);
@@ -107,9 +118,9 @@ if(gs.length>1)o+=`<text x="600" y="58" font-weight="700">${esc(bn)}</text>`;ret
 function pareto(e,tot,nm){const n=e.length;let cum=0;return frame({title:'Pareto Chart of '+nm,x:[0,n],y:[0,tot],R:60,xl:nm,yl:'Count',xt:e.map((a,i)=>[i+.5,a[0].length>12?a[0].slice(0,11)+'…':a[0]]),yt:ticks(0,tot,5).map(v=>[v,v]),rt:[0,20,40,60,80,100].map(p=>[tot*p/100,p+'%']),
 body:(sx,sy)=>{let s='',pt=[];e.forEach(([k,c],i)=>{cum+=c;s+=`<rect x="${sx(i+.08)}" y="${sy(c)}" width="${sx(.84)-sx(0)}" height="${sy(0)-sy(c)}" fill="#5b9bd5" stroke="#1f4e79"/><text x="${sx(i+.5)}" y="${sy(c)-4}" text-anchor="middle">${c}</text>`;pt.push([sx(i+1),sy(cum)])});
 return s+`<line x1="${sx(0)}" x2="${sx(n)}" y1="${sy(.8*tot)}" y2="${sy(.8*tot)}" stroke="#888" stroke-dasharray="5 4"/><polyline points="${[[sx(0),sy(0)],...pt].join(' ')}" fill="none" stroke="#c00" stroke-width="2"/>`+pt.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3.5" fill="#c00"/>`).join('')}})}
-function csvg(o){const v=o.v,n=v.length,f=o.off||0,lo=Math.min(...v,o.lcl),hi=Math.max(...v,o.ucl),d=(hi-lo)*.08;
+function csvg(o){const v=o.v,n=v.length,f=o.off||0,lo=Math.min(...v,...[].concat(o.lcl)),hi=Math.max(...v,...[].concat(o.ucl)),d=(hi-lo)*.08;
 return frame({title:o.title,H:300,R:95,x:[.5+f,n+.5+f],y:[lo-d,hi+d],xl:o.xl,yl:o.yl,body:(sx,sy)=>{let s='';const X=sx(n+.5+f)+4;
-[[o.ucl,'UCL','#c00'],[o.cl,o.cn,'#1a8a1a'],[o.lcl,'LCL','#c00']].forEach(([y,t,c])=>s+=`<line x1="${sx(.5+f)}" x2="${sx(n+.5+f)}" y1="${sy(y)}" y2="${sy(y)}" stroke="${c}" stroke-width="1.5"/><text x="${X}" y="${sy(y)+4}" fill="${c}">${t}=${g(y)}</text>`);
+[[o.ucl,'UCL','#c00'],[o.cl,o.cn,'#1a8a1a'],[o.lcl,'LCL','#c00']].forEach(([y,t,c])=>s+=Array.isArray(y)?`<polyline fill="none" stroke="${c}" stroke-width="1.5" points="${y.map((z,i)=>sx(i+.5+f)+','+sy(z)+' '+sx(i+1.5+f)+','+sy(z)).join(' ')}"/><text x="${X}" y="${sy(y[y.length-1])+4}" fill="${c}">${t}</text>`:`<line x1="${sx(.5+f)}" x2="${sx(n+.5+f)}" y1="${sy(y)}" y2="${sy(y)}" stroke="${c}" stroke-width="1.5"/><text x="${X}" y="${sy(y)+4}" fill="${c}">${t}=${g(y)}</text>`);
 s+=`<polyline fill="none" stroke="#2a5db0" points="${v.map((y,i)=>sx(i+1+f)+','+sy(y)).join(' ')}"/>`;
 v.forEach((y,i)=>{const t=o.t.map((a,k)=>a.includes(i)?k+1:'').join(''),x=sx(i+1+f);s+=t?`<rect x="${x-4}" y="${sy(y)-4}" width="8" height="8" fill="#c00"/><text x="${x}" y="${sy(y)-8}" text-anchor="middle" fill="#c00" font-weight="700">${t}</text>`:`<circle cx="${x}" cy="${sy(y)}" r="3" fill="#2a5db0"/>`});return s}})}
 function wrap(s,n){const w=s.split(' '),l=[''];w.forEach(x=>{if((l[l.length-1]+' '+x).length>n&&l[l.length-1])l.push(x);else l[l.length-1]+=(l[l.length-1]?' ':'')+x});return l}
@@ -119,7 +130,8 @@ f.c.forEach((txt,i)=>{const ln=txt.split('\n').map(x=>x.trim()).filter(Boolean);
 s+=`<line x1="${bx}" y1="${ty}" x2="${px}" y2="${sy}" stroke="#1f4e79" stroke-width="2"/><rect x="${bx-55}" y="${top?ty-26:ty}" width="110" height="26" fill="#1f4e79"/><text x="${bx}" y="${(top?ty-26:ty)+17}" text-anchor="middle" fill="#fff" font-weight="700">${esc(ln[0])}</text>`;
 cs.forEach((c,k)=>{const t=(k+1)/(cs.length+1),cx=bx+(px-bx)*t,cy=ty+(sy-ty)*t;s+=`<line x1="${cx-118}" y1="${cy}" x2="${cx}" y2="${cy}" stroke="#777"/><text x="${cx-115}" y="${cy-3}" font-size="${c.length>22?9:11}">${esc(c)}</text>`})});return s+'</svg>'}
 /* ---------- tools ---------- */
-const TM={k:'tm',l:'Tests for special causes (I and Xbar charts)',t:'l',o:['Test 1 only (Minitab default)','Tests 1 and 2','All tests 1 to 8'],d:0};
+const TM={k:'tm',l:'Tests for special causes (I and Xbar charts)',t:'l',o:['Test 1 only (default)','Tests 1 and 2','All tests 1 to 8'],d:0};
+const TA={k:'tm',l:'Tests for special causes',t:'l',o:['Test 1 only (default)','Tests 1 and 2'],d:0},SZ={k:'n',l:'Subgroup size (constant)',t:'k',d:100};
 const N=(k,l,d)=>({k,l,t:'n',d}),A=(k,l,d,o)=>({k,l,t:'c',d,o});
 const T={
 desc:{t:'Display Descriptive Statistics',f:[{k:'x',l:'Variables',t:'n',d:0,all:1}],run:v=>{const cs=v.x==-2?numCols():[v.x];
@@ -162,6 +174,15 @@ pm=s=>[isNaN(L)?NaN:Phi((L-m)/s)*1e6,isNaN(U)?NaN:(1-Phi((U-m)/s))*1e6],ob=[isNa
 kv=(a,b)=>a.padEnd(18)+b,pp=(a,t)=>[kv('PPM < LSL',g(a[0],2)),kv('PPM > USL',g(a[1],2)),kv('PPM Total',g(a.reduce((z,y)=>z+(isNaN(y)?0:y),0),2))].join('\n'),sp=z=>isNaN(z)?'*':z;
 out('Process Capability of '+nm,['Process Data',kv('LSL',sp(L)),kv('Target',sp(Tg)),kv('USL',sp(U)),kv('Sample Mean',g(m)),kv('Sample N',n),kv('StDev (Within)',g(sw)),kv('StDev (Overall)',g(so)),'','Potential (Within) Capability',kv('Cp',g(w.p,2)),kv('CPL',g(w.l,2)),kv('CPU',g(w.u,2)),kv('Cpk',g(w.k,2)),'','Overall Capability',kv('Pp',g(o.p,2)),kv('PPL',g(o.l,2)),kv('PPU',g(o.u,2)),kv('Ppk',g(o.k,2)),kv('Cpm','*'),'','Observed Performance',pp(ob),'','Exp. Within Performance',pp(pm(sw)),'','Exp. Overall Performance',pp(pm(so))].join('\n'));
 const ed=edges(x);gw('Capability',hsvg(x,ed,ymx(x,ed,1)*1.12,'Process Capability of '+nm,nm,1,440,{l:L,u:U,t:Tg}))}},
+xs:{t:'Xbar-S Chart',f:[N('x','Observations in one column',0),{k:'n',l:'Subgroup size (2 to 10)',t:'k',d:5},TM],run:v=>{const n=v.n;if(!(n>=2&&n<=10))throw Error('Subgroup size must be between 2 and 10.');const x=ok(nums(v.x)),k=Math.floor(x.length/n);if(k<2)throw Error('Not enough data for 2 subgroups.');
+const A3=[2.659,1.954,1.628,1.427,1.287,1.182,1.099,1.032,.975][n-2],B3=[0,0,0,0,.03,.118,.185,.239,.284][n-2],B4=[3.267,2.568,2.266,2.089,1.97,1.882,1.815,1.761,1.716][n-2],nm=C[v.x].n,mn=[],ss=[];
+for(let i=0;i<k;i++){const q=x.slice(i*n,i*n+n);mn.push(mean(q));ss.push(sd(q))}const xb=mean(mn),sb=mean(ss),u=xb+A3*sb,l=xb-A3*sb,t1=tests8(mn,xb,u,l,v.tm),t2=tests8(ss,sb,B4*sb,B3*sb,0).slice(0,1);
+out('Xbar-S Chart of '+nm,tout('Xbar Chart of '+nm,t1)+'\n\n'+tout('S Chart of '+nm,t2));
+gw('Xbar-S',csvg({title:'Xbar-S Chart of '+nm,v:mn,cl:xb,ucl:u,lcl:l,cn:'X̿',t:t1,xl:'Sample',yl:'Sample Mean'})+csvg({title:'Sample StDev',v:ss,cl:sb,ucl:B4*sb,lcl:B3*sb,cn:'S̄',t:t2,xl:'Sample',yl:'Sample StDev'}))}},
+pc:{t:'P Chart (proportion defective)',f:[N('x','Number of defective items',3),N('s','Subgroup sizes (column)',4),TA],run:v=>att('p',v)},
+npc:{t:'NP Chart (number defective)',f:[N('x','Number of defective items',5),SZ,TA],run:v=>att('np',v)},
+cc:{t:'C Chart (defects per unit)',f:[N('x','Number of defects',6),TA],run:v=>att('c',v)},
+uc:{t:'U Chart (defects per varying units)',f:[N('x','Number of defects',7),N('s','Number of units inspected (column)',8),TA],run:v=>att('u',v)},
 web:{t:'Open from web link',f:[{k:'u',l:'CSV link (e.g. a Google Sheet published to web as CSV)',t:'s',d:()=>webUrl}],run:v=>{webUrl=v.u.trim();refresh()}}};
 /* ---------- file, share ---------- */
 function openFile(){if(!window.XLSX)return alert('Excel reader could not load (no internet). Use File > Open from web link, or paste data into the worksheet.');const i=document.createElement('input');i.type='file';i.accept='.xlsx,.xls,.csv';i.onchange=async()=>{try{load(wb2c(XLSX.read(await i.files[0].arrayBuffer(),{type:'array'})))}catch(e){alert('Could not read file: '+e.message)}};i.click()}
@@ -175,10 +196,10 @@ const help=()=>modal('7 QC Tools – where to find them',`<p><b>1 Check sheet</b
 const H=t=>[t],M={
 File:[['Open Excel / CSV file…',openFile],['Open from web link (live sheet)…',()=>dlg('web')],['Refresh from web link',refresh],['Create share link for trainees…',share],['Save worksheet as CSV',saveCsv],['Load sample data',()=>{load(sample());fishes=dflt();fidx=0;fish=fishes[0]}]],
 Edit:[['Add 10 rows',()=>{xr+=10;show('w')}],['Add column',()=>{C.push({n:'C'+(C.length+1),d:[]});show('w')}],['Clear worksheet',()=>{if(confirm('Clear all data?'))load(Array.from({length:6},(_,i)=>({n:'C'+(i+1),d:[]})))}]],
-Stat:[H('Basic Statistics'),['Display Descriptive Statistics…',()=>dlg('desc')],['Normality Test (Anderson-Darling)…',()=>dlg('norm')],['Correlation…',()=>dlg('corr')],H('Regression'),['Fitted Line Plot / Regression…',()=>dlg('reg')],H('Quality Tools'),['Pareto Chart…',()=>dlg('par')],['Capability Analysis (Normal)…',()=>dlg('cap')],['Cause-and-Effect (Fishbone)…',()=>dlg('fish')],H('Control Charts'),['I-MR Chart…',()=>dlg('imr')],['Xbar-R Chart…',()=>dlg('xr')],H('Tables'),['Tally / Check Sheet…',()=>dlg('chk')]],
+Stat:[H('Basic Statistics'),['Display Descriptive Statistics…',()=>dlg('desc')],['Normality Test (Anderson-Darling)…',()=>dlg('norm')],['Correlation…',()=>dlg('corr')],H('Regression'),['Fitted Line Plot / Regression…',()=>dlg('reg')],H('Quality Tools'),['Pareto Chart…',()=>dlg('par')],['Capability Analysis (Normal)…',()=>dlg('cap')],['Cause-and-Effect (Fishbone)…',()=>dlg('fish')],H('Control Charts – Variables'),['I-MR Chart…',()=>dlg('imr')],['Xbar-R Chart…',()=>dlg('xr')],['Xbar-S Chart…',()=>dlg('xs')],H('Control Charts – Attributes'),['P Chart…',()=>dlg('pc')],['NP Chart…',()=>dlg('npc')],['C Chart…',()=>dlg('cc')],['U Chart…',()=>dlg('uc')],H('Tables'),['Tally / Check Sheet…',()=>dlg('chk')]],
 Graph:[['Histogram…',()=>dlg('hist')],['Scatterplot…',()=>dlg('scat')],H('Stratification'),['Stratified Histogram (By variable)…',()=>dlg('hist',{by:mcol()})],['Stratified Scatterplot (By variable)…',()=>dlg('scat',{by:mcol(),fit:1})]],
 Fishbone:[],
-Help:[['7 QC tools – menu map',help]]};
+Help:[['7 QC tools – menu map',help],['Control chart selection guide (new tab)',()=>window.open('chart_guide.html','_blank')]]};
 function menu(n,b){if(n=='Fishbone')M.Fishbone=[...fishes.map((f,i)=>[(i+1)+'. '+f.e,()=>{fidx=i;fish=f;gw('Fishbone',fishSvg(f))}]),H('Change'),['Edit current / add new diagram…',()=>dlg('fish')]];const d=$('#dd');d.innerHTML=M[n].map((m,i)=>m[1]?`<div onclick="hideDD();M['${n}'][${i}][1]()">${m[0]}</div>`:`<div class=h>${m[0]}</div>`).join('');const r=b.getBoundingClientRect();d.style.left=Math.max(0,Math.min(r.left,innerWidth-280))+'px';d.style.top=r.bottom+'px';d.style.display='block'}
 const hideDD=()=>$('#dd').style.display='none';document.addEventListener('click',e=>{if(!e.target.closest('.mb'))hideDD()});
 $('#menu').innerHTML=Object.keys(M).map(k=>`<div class=mb onclick="menu('${k}',this)">${k}</div>`).join('');
