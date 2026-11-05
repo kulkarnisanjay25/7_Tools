@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DWM Six Sigma & Process Shift Simulator</title>
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --secondary-color: #2b6cb0;
+            --accent-color: #e53e3e;
+            --target-color: #48bb78; /* Green for Process Mean */
+            --mean-color: #3182ce;   /* Pure Blue for Design Mean */
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+            flex: 0 0 auto;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        header p {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr; 
+            gap: 15px;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        @media (max-width: 950px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+            html, body {
+                overflow: auto;
+                height: auto;
+            }
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        .controls-card {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 11px;
+            color: #4a5568;
+        }
+
+        .slider-label span.value {
+            color: var(--secondary-color);
+            background: #ebf8ff;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 5px;
+            background: #cbd5e0;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            margin: 3px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+        }
+
+        /* Highlight actual target slider differently to help guide student focus */
+        input#meanSlider::-webkit-slider-thumb {
+            background: var(--target-color);
+        }
+
+        .metrics-subgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-top: 4px solid var(--secondary-color);
+        }
+
+        .metric-card.status-alert {
+            border-top-color: var(--accent-color);
+        }
+
+        .metric-card.status-success {
+            border-top-color: var(--target-color);
+        }
+
+        .metric-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 2px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .formula-container {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            overflow-y: auto;
+        }
+
+        .formula-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 4px;
+        }
+
+        .formula-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f7fafc;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .math-box {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-size: 13px;
+            color: #2d3748;
+            font-style: italic;
+        }
+
+        .math-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            text-align: center;
+            vertical-align: middle;
+            padding: 0 4px;
+        }
+
+        .math-numerator {
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 1px;
+        }
+
+        .math-denominator {
+            padding-top: 1px;
+        }
+
+        .live-calc-box {
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            text-align: right;
+            min-width: 135px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .visualizer-section {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .visualizer-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .svg-container {
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .line-usl, .line-lsl {
+            stroke: #ecc94b;
+            stroke-width: 3;
+        }
+        .line-mean {
+            stroke: var(--mean-color);
+            stroke-width: 2.5;
+        }
+        .line-target {
+            stroke: var(--target-color);
+            stroke-width: 2.5;
+        }
+        .distribution-curve {
+            fill: rgba(66, 153, 225, 0.28);
+            stroke: var(--secondary-color);
+            stroke-width: 2.5;
+        }
+        .sigma-marker {
+            stroke: #a0aec0;
+            stroke-width: 1;
+        }
+        .axis-line {
+            stroke: #2d3748;
+            stroke-width: 2;
+        }
+        .axis-text {
+            font-size: 11px;
+            fill: #4a5568;
+            text-anchor: middle;
+        }
+        .limit-label-bg {
+            fill: #ecc94b;
+            rx: 4;
+        }
+        .limit-label-text {
+            font-size: 11px;
+            font-weight: bold;
+            fill: #1a202c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Six Sigma & Process Variation Simulator</h1>
+        <p>Interactive Training Dashboard for Visualizing Capability Shifts and Specification Centering Parameters</p>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <div class="left-panel">
+            <div class="controls-card">
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>Variation (&sigma;)</span>
+                        <span id="sigmaValDisplay" class="value">40.00</span>
+                    </div>
+                    <input type="range" id="sigmaSlider" min="15" max="110" step="0.5" value="40">
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span style="color: var(--target-color); font-weight: bold;">Process Mean (&mu;)</span>
+                        <span id="meanValDisplay" class="value" style="background: #e6fffa; color: var(--target-color);">450</span>
+                    </div>
+                    <input type="range" id="meanSlider" min="320" max="580" step="2" value="450">
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>LSL</span>
+                        <span id="lslValDisplay" class="value">250</span>
+                    </div>
+                    <input type="range" id="lslSlider" min="100" max="400" step="5" value="250">
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>USL</span>
+                        <span id="uslValDisplay" class="value">650</span>
+                    </div>
+                    <input type="range" id="uslSlider" min="500" max="800" step="5" value="650">
+                </div>
+            </div>
+
+            <div class="metrics-subgrid">
+                <div class="metric-card" id="cardCp">
+                    <div class="metric-title">Cp</div>
+                    <div id="valCp" class="metric-value">0.00</div>
+                </div>
+                <div class="metric-card" id="cardCpk">
+                    <div class="metric-title">Cpk</div>
+                    <div id="valCpk" class="metric-value">0.00</div>
+                </div>
+                <div class="metric-card" id="cardSigmaLevel">
+                    <div class="metric-title">Process Sigma Level</div>
+                    <div id="valSigmaLevel" class="metric-value">0.00</div>
+                </div>
+                <div class="metric-card" id="cardDpmo">
+                    <div class="metric-title">Estimated DPMO</div>
+                    <div id="valDpmo" class="metric-value">0</div>
+                </div>
+            </div>
+
+            <div class="formula-container">
+                <div class="formula-title">Mathematical Formula Verification</div>
+                
+                <div class="formula-row">
+                    <div class="math-box">
+                        Cp = 
+                        <div class="math-fraction">
+                            <span class="math-numerator">USL - LSL</span>
+                            <span class="math-denominator">6 &sigma;</span>
+                        </div>
+                    </div>
+                    <div id="calcCp" class="live-calc-box">0.00 / 0.00 = 0.00</div>
+                </div>
+
+                <div class="formula-row">
+                    <div class="math-box">
+                        Cpk = min
+                        <span style="font-size:16px; vertical-align:middle;">[</span>
+                        <div class="math-fraction">
+                            <span class="math-numerator">USL - &mu;</span>
+                            <span class="math-denominator">3 &sigma;</span>
+                        </div>,
+                        <div class="math-fraction">
+                            <span class="math-numerator">&mu; - LSL</span>
+                            <span class="math-denominator">3 &sigma;</span>
+                        </div>
+                        <span style="font-size:16px; vertical-align:middle;">]</span>
+                    </div>
+                    <div id="calcCpk" class="live-calc-box">min(0, 0) = 0.00</div>
+                </div>
+
+                <div class="formula-row">
+                    <div class="math-box">
+                        Sigma = min
+                        <span style="font-size:16px; vertical-align:middle;">[</span>
+                        <div class="math-fraction">
+                            <span class="math-numerator">USL - &mu;</span>
+                            <span class="math-denominator">&sigma;</span>
+                        </div>,
+                        <div class="math-fraction">
+                            <span class="math-numerator">&mu; - LSL</span>
+                            <span class="math-denominator">&sigma;</span>
+                        </div>
+                        <span style="font-size:16px; vertical-align:middle;">]</span>
+                    </div>
+                    <div id="calcSigma" class="live-calc-box">min(0, 0) = 0.0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualizer-section">
+            <div class="visualizer-title">Visualizer</div>
+            <div class="svg-container">
+                <svg id="sigmaSvg" viewBox="0 0 900 480" preserveAspectRatio="xMidYMid meet">
+                    
+                    <path id="distributionPath" class="distribution-curve" d="" />
+
+                    <line id="lslLine" x1="250" y1="40" x2="250" y2="420" class="line-lsl" />
+                    <line id="uslLine" x1="650" y1="40" x2="650" y2="420" class="line-usl" />
+                    
+                    <line id="meanLine" x1="450" y1="40" x2="450" y2="420" class="line-mean" />
+                    
+                    <line id="targetLine" x1="450" y1="40" x2="450" y2="420" class="line-target" />
+
+                    <line x1="50" y1="420" x2="850" y2="420" class="axis-line" />
+
+                    <g id="lslLabelGroup">
+                        <rect id="lslLabelBg" x="215" y="15" width="70" height="20" class="limit-label-bg" />
+                        <text id="lslText" x="250" y="29" class="limit-label-text" text-anchor="middle">LSL 250</text>
+                    </g>
+                    
+                    <g id="uslLabelGroup">
+                        <rect id="uslLabelBg" x="615" y="15" width="70" height="20" class="limit-label-bg" />
+                        <text id="uslText" x="650" y="29" class="limit-label-text" text-anchor="middle">USL 650</text>
+                    </g>
+
+                    <text id="processText" x="450" y="445" class="axis-text" style="fill: var(--target-color); font-weight: bold; text-anchor: middle;">Process Mean (&mu;): 450</text>
+                    <text id="designText" x="450" y="29" class="axis-text" style="fill: var(--mean-color); font-weight: bold; text-anchor: middle;">Design Mean: 450</text>
+
+                    <g id="sigmaMarkersContainer"></g>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const GRAPH_BOTTOM = 420; 
+    const MAX_HEIGHT_SCALE = 17250; 
+
+    const sigmaSlider = document.getElementById('sigmaSlider');
+    const meanSlider = document.getElementById('meanSlider');
+    const lslSlider = document.getElementById('lslSlider');
+    const uslSlider = document.getElementById('uslSlider');
+
+    const sigmaValDisplay = document.getElementById('sigmaValDisplay');
+    const meanValDisplay = document.getElementById('meanValDisplay');
+    const lslValDisplay = document.getElementById('lslValDisplay');
+    const uslValDisplay = document.getElementById('uslValDisplay');
+
+    const valCp = document.getElementById('valCp');
+    const valCpk = document.getElementById('valCpk');
+    const valSigmaLevel = document.getElementById('valSigmaLevel');
+    const valDpmo = document.getElementById('valDpmo');
+
+    const cardCp = document.getElementById('cardCp');
+    const cardCpk = document.getElementById('cardCpk');
+    const cardSigmaLevel = document.getElementById('cardSigmaLevel');
+    const cardDpmo = document.getElementById('cardDpmo');
+
+    const calcCp = document.getElementById('calcCp');
+    const calcCpk = document.getElementById('calcCpk');
+    const calcSigma = document.getElementById('calcSigma');
+
+    function getNormalCDF(z) {
+        if (z < 0) return 1 - getNormalCDF(-z);
+        let p = 1.0 + 0.0498673470 * z + 0.0211410061 * Math.pow(z, 2) + 0.0032776263 * Math.pow(z, 3) + 
+                0.0000380036 * Math.pow(z, 4) + 0.0000488906 * Math.pow(z, 5) + 0.0000053830 * Math.pow(z, 6);
+        return 1.0 - 0.5 * Math.pow(p, -16);
+    }
+
+    function updateSimulation() {
+        const sigma = parseFloat(sigmaSlider.value);
+        const processMean = parseFloat(meanSlider.value); // Dynamic Process Center point
+        const lsl = parseFloat(lslSlider.value);
+        const usl = parseFloat(uslSlider.value);
+
+        sigmaValDisplay.textContent = sigma.toFixed(2);
+        meanValDisplay.textContent = processMean.toFixed(0);
+        lslValDisplay.textContent = lsl;
+        uslValDisplay.textContent = usl;
+
+        document.getElementById('lslLine').setAttribute('x1', lsl);
+        document.getElementById('lslLine').setAttribute('x2', lsl);
+        document.getElementById('lslText').setAttribute('x', lsl);
+        document.getElementById('lslLabelBg').setAttribute('x', lsl - 35);
+        document.getElementById('lslText').textContent = `LSL ${lsl}`;
+
+        document.getElementById('uslLine').setAttribute('x1', usl);
+        document.getElementById('uslLine').setAttribute('x2', usl);
+        document.getElementById('uslText').setAttribute('x', usl);
+        document.getElementById('uslLabelBg').setAttribute('x', usl - 35);
+        document.getElementById('uslText').textContent = `USL ${usl}`;
+
+        // Compute Dynamic Engineering Design Mean (Midpoint between LSL and USL bounds)
+        const designMean = lsl + ((usl - lsl) / 2);
+        document.getElementById('meanLine').setAttribute('x1', designMean);
+        document.getElementById('meanLine').setAttribute('x2', designMean);
+        document.getElementById('designText').setAttribute('x', designMean);
+        document.getElementById('designText').textContent = `Design Mean: ${designMean.toFixed(0)}`;
+
+        // Re-align Process Actual Mean green reference line to match meanSlider values
+        document.getElementById('targetLine').setAttribute('x1', processMean);
+        document.getElementById('targetLine').setAttribute('x2', processMean);
+        document.getElementById('processText').setAttribute('x', processMean);
+        document.getElementById('processText').textContent = `Process Mean (&mu;): ${processMean.toFixed(0)}`;
+
+        // Calculate curve coordinates relative to the dynamic processMean position variable
+        let points = [];
+        points.push(`M 50 ${GRAPH_BOTTOM}`);
+
+        for (let x = 50; x <= 850; x += 0.5) {
+            let exponent = -0.5 * Math.pow((x - processMean) / sigma, 2);
+            let yComponent = (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+            let yVisual = GRAPH_BOTTOM - (yComponent * MAX_HEIGHT_SCALE);
+            
+            if (yVisual > GRAPH_BOTTOM) yVisual = GRAPH_BOTTOM;
+            points.push(`L ${x} ${yVisual}`);
+        }
+        points.push(`L 850 ${GRAPH_BOTTOM} Z`);
+        document.getElementById('distributionPath').setAttribute('d', points.join(' '));
+
+        // Re-draw Sigma reference sub-nodes relative to the dynamic processMean variable position
+        const sigmaMarkersContainer = document.getElementById('sigmaMarkersContainer');
+        sigmaMarkersContainer.innerHTML = '';
+
+        const standardTicks = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6];
+        standardTicks.forEach(tick => {
+            let tickX = processMean + (tick * sigma);
+            if (tickX >= 50 && tickX <= 850) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", tickX);
+                line.setAttribute("y1", GRAPH_BOTTOM);
+                line.setAttribute("x2", tickX);
+                line.setAttribute("y2", GRAPH_BOTTOM + 6);
+                line.setAttribute("class", "sigma-marker");
+                
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tickX);
+                text.setAttribute("y", GRAPH_BOTTOM + 18);
+                text.setAttribute("class", "axis-text");
+                
+                let prefix = tick > 0 ? `+${tick}` : `${tick}`;
+                text.textContent = `${prefix}σ`;
+
+                sigmaMarkersContainer.appendChild(line);
+                sigmaMarkersContainer.appendChild(text);
+            }
+        });
+
+        const linearBaselines = [100, 200, 300, 400, 700, 800];
+        linearBaselines.forEach(val => {
+            let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", val);
+            text.setAttribute("y", GRAPH_BOTTOM + 32);
+            text.setAttribute("class", "axis-text");
+            text.setAttribute("style", "fill: #718096; font-size: 10px;");
+            text.textContent = val;
+            sigmaMarkersContainer.appendChild(text);
+        });
+
+        // Advanced Quality Metric Performance Tracking Calculations Engine
+        const specWidth = usl - lsl;
+        const sixSigma = 6 * sigma;
+        const cp = specWidth / sixSigma; // Cp relies strictly on width profile and sigma value
+
+        // Cpk shifts dynamically based on relative distance calculations from processMean
+        const cpuVal = (usl - processMean);
+        const cplVal = (processMean - lsl);
+        const threeSigma = 3 * sigma;
+        
+        const cpu = cpuVal / threeSigma;
+        const cpl = cplVal / threeSigma;
+        const cpk = Math.max(0, Math.min(cpu, cpl));
+
+        const zLSL = (processMean - lsl) / sigma;
+        const zUSL = (usl - processMean) / sigma;
+        
+        const defectLeft = 1 - getNormalCDF(zLSL);
+        const defectRight = 1 - getNormalCDF(zUSL);
+        const totalDefectProbability = defectLeft + defectRight;
+        const dpmo = Math.round(totalDefectProbability * 1000000);
+        
+        const processSigmaLevel = Math.min(zLSL, zUSL);
+
+        // Update indicators grid layout
+        valCp.textContent = cp.toFixed(2);
+        valCpk.textContent = cpk.toFixed(2);
+        valSigmaLevel.textContent = processSigmaLevel.toFixed(1);
+        valDpmo.textContent = dpmo.toLocaleString();
+
+        // Print dynamic arithmetic processes right inside calculations card
+        calcCp.innerHTML = `${specWidth} / ${sixSigma.toFixed(0)} = <strong>${cp.toFixed(2)}</strong>`;
+        calcCpk.innerHTML = `min(${cpu.toFixed(2)}, ${cpl.toFixed(2)}) = <strong>${cpk.toFixed(2)}</strong>`;
+        calcSigma.innerHTML = `min(${zUSL.toFixed(1)}, ${zLSL.toFixed(1)}) = <strong>${processSigmaLevel.toFixed(1)}&sigma;</strong>`;
+
+        adjustCardFormatting(cardCpk, cpk, 1.33, 1.0);
+        adjustCardFormatting(cardCp, cp, 1.33, 1.0);
+        adjustCardFormatting(cardSigmaLevel, processSigmaLevel, 6.0, 3.0);
+        
+        if (dpmo > 66807) {
+            cardDpmo.className = "metric-card status-alert";
+        } else if (dpmo <= 3.4) {
+            cardDpmo.className = "metric-card status-success";
+        } else {
+            cardDpmo.className = "metric-card";
+        }
+    }
+
+    function adjustCardFormatting(element, value, successThreshold, dangerThreshold) {
+        if (value >= successThreshold) {
+            element.className = "metric-card status-success";
+        } else if (value < dangerThreshold) {
+            element.className = "metric-card status-alert";
+        } else {
+            element.className = "metric-card";
+        }
+    }
+
+    sigmaSlider.addEventListener('input', updateSimulation);
+    meanSlider.addEventListener('input', updateSimulation);
+    lslSlider.addEventListener('input', updateSimulation);
+    uslSlider.addEventListener('input', updateSimulation);
+
+    updateSimulation();
+</script>
+
+</body>
+</html>
